@@ -1,0 +1,7 @@
+.cache/
+.static-cache/
+__pycache__/
+*.pyc
+site/data/news.json
+site/data/*.tmp
+.DS_Store
