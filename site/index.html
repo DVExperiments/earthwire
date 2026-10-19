@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Earthwire — the world's news, where it happens</title>
+  <meta name="description" content="A live holographic globe of world news, placed where it happens. Built on GDELT, updated every 30 minutes.">
+  <meta name="theme-color" content="#02060c">
+  <meta property="og:title" content="Earthwire">
+  <meta property="og:description" content="The world's news, where it happens.">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..700&display=swap">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="preload" href="data/news.json" as="fetch" crossorigin>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="stage" id="stage">
+      <canvas id="globe" aria-hidden="true"></canvas>
+      <div class="labels" id="labels" aria-hidden="true"></div>
+      <div class="tip" id="tip" role="tooltip" hidden></div>
+      <div class="boot" id="boot"><span class="boot-ring"></span><span id="bootText">Loading the globe</span></div>
+    </div>
+
+    <header class="bar">
+      <a class="brand" href="./" aria-label="Earthwire home">
+        <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+          <circle cx="16" cy="16" r="13" />
+          <ellipse cx="16" cy="16" rx="5.5" ry="13" />
+          <path d="M3.5 12h25M3.5 20h25" />
+          <circle class="mark-dot" cx="21" cy="11" r="2.4" />
+        </svg>
+        <span class="brand-name">Earthwire</span>
+      </a>
+      <div class="search" id="search">
+        <label class="sr" for="q">Search a country or city</label>
+        <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search a country or city"
+          role="combobox" aria-expanded="false" aria-controls="results" aria-autocomplete="list">
+        <ul class="results" id="results" role="listbox" hidden></ul>
+      </div>
+      <p class="status" id="status" aria-live="polite"></p>
+      <button class="icon-btn" id="aboutBtn" type="button" aria-haspopup="dialog">About</button>
+    </header>
+
+    <aside class="panel" id="panel" aria-label="News list" data-sheet="peek">
+      <button class="sheet-handle" id="sheetHandle" type="button" aria-label="Expand news list"><span></span></button>
+      <div class="panel-body" id="panelBody" tabindex="-1"></div>
+    </aside>
+
+    <div class="dock" id="dock">
+      <div class="legend" id="legend" role="group" aria-label="Show or hide types of news"></div>
+      <div class="timeline">
+        <div class="windows" id="windows" role="radiogroup" aria-label="Time window"></div>
+        <svg class="spark" id="spark" viewBox="0 0 240 34" preserveAspectRatio="none" role="img" aria-label="Stories per hour over the last day"></svg>
+      </div>
+      <div class="tools">
+        <div class="layers-wrap">
+          <button class="tool" id="layersBtn" type="button" aria-expanded="false" aria-controls="layers">Layers</button>
+          <fieldset class="layers" id="layers" hidden>
+            <legend class="sr">Map layers</legend>
+            <label><input type="checkbox" data-layer="news" checked> News</label>
+            <label><input type="checkbox" data-layer="beams" checked> Hotspot beams</label>
+            <label><input type="checkbox" data-layer="pop" checked> Population <span class="swatch pop"></span></label>
+            <label><input type="checkbox" data-layer="air"> Air routes <span class="swatch air"></span></label>
+            <label><input type="checkbox" data-layer="sea"> Shipping lanes <span class="swatch sea"></span></label>
+            <label><input type="checkbox" data-layer="borders" checked> Borders</label>
+            <label><input type="checkbox" data-layer="grid" checked> Grid</label>
+            <label><input type="checkbox" data-layer="rotate" checked> Slow spin</label>
+          </fieldset>
+        </div>
+        <button class="tool sq" id="zoomIn" type="button" aria-label="Zoom in">+</button>
+        <button class="tool sq" id="zoomOut" type="button" aria-label="Zoom out">−</button>
+        <button class="tool sq" id="homeBtn" type="button" aria-label="Zoom out to the whole globe">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="M10 1v4M10 15v4M1 10h4M15 10h4"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <dialog class="about" id="about" aria-labelledby="aboutTitle">
+      <form method="dialog"><button class="icon-btn close" aria-label="Close">Close</button></form>
+      <h2 id="aboutTitle">How Earthwire works</h2>
+      <p>Each dot is a news story placed where the event it describes happened. Stories come from the
+        <a href="https://www.gdeltproject.org/" target="_blank" rel="noopener">GDELT Project</a>, which reads news
+        from around the world in more than 100 languages every 15 minutes. Earthwire rebuilds the map from GDELT every
+        30 minutes and keeps the last 24 hours.</p>
+      <h3>What the dots mean</h3>
+      <div class="about-legend" id="aboutLegend"></div>
+      <p><span class="glyph solid"></span> A solid dot is placed at a specific city or landmark.
+        <span class="glyph ring"></span> A ring is placed at the centre of a state or province, because the story
+        didn’t name anywhere more precise. Stories that only name a country aren’t drawn; you’ll find them when you
+        open that country. A pulsing dot has stories from the last hour. Bigger dots have more stories.</p>
+      <h3>How accurate is it?</h3>
+      <p>GDELT codes events and locations automatically, so some stories will be in the wrong place or the wrong
+        category, and a place can appear because it was mentioned rather than because something happened there.
+        Treat the map as a guide to where the world’s attention is, then read the original reporting. Headlines that
+        couldn’t be fetched are rebuilt from the article’s web address.</p>
+      <h3>Other layers</h3>
+      <p>Population glow: WorldPop 2020 1&nbsp;km population density (CC BY 4.0). Air routes: the busiest airport pairs
+        from OpenFlights (a 2014 snapshot, ODbL), not live flights. Shipping lanes: Benden (2022), derived from a CIA
+        map of the world’s oceans (CC BY 4.0). Borders, lakes and cities: Natural Earth (public domain). Borders are
+        shown as Natural Earth draws them and don’t imply any position on disputed territory.</p>
+      <p class="about-foot" id="aboutFoot"></p>
+    </dialog>
+  </div>
+  <noscript><p class="noscript">Earthwire needs JavaScript and WebGL to draw the globe.</p></noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
