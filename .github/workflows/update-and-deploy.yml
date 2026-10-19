@@ -1,0 +1,89 @@
+name: Update news and deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Every 30 minutes, offset from the top of the hour when GitHub is busiest.
+    - cron: "7,37 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: write   # lets the job delete its own old caches
+
+concurrency:
+  group: earthwire-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Restore GDELT cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache
+          key: gdelt-${{ github.run_id }}
+          restore-keys: gdelt-
+
+      - name: Build news from GDELT
+        id: news
+        continue-on-error: true
+        env:
+          EW_HOURS: "24"
+          EW_MAX_STORIES: "6000"
+          EW_TRANSLINGUAL: "1"
+          EW_TITLE_FETCH: "350"
+        run: python pipeline/build_news.py
+
+      - name: Save GDELT cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .cache
+          key: gdelt-${{ github.run_id }}
+
+      - name: Delete older caches
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh cache list --key gdelt- --limit 50 --json id,key \
+            --jq '.[] | select(.key != "gdelt-${{ github.run_id }}") | .id' \
+            | xargs -r -n1 gh cache delete || true
+
+      - name: Keep the last published news if GDELT failed
+        if: steps.news.outcome != 'success'
+        run: |
+          echo "::warning::GDELT update failed; republishing the previous news.json"
+          curl -fsSL "${{ steps.pages.outputs.base_url }}/data/news.json" -o site/data/news.json \
+            || echo "::warning::No previous news.json found; the site will show its empty state."
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
