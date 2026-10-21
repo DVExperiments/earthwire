@@ -21,7 +21,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
 
@@ -45,10 +45,18 @@ jobs:
         continue-on-error: true
         env:
           EW_HOURS: "24"
-          EW_MAX_STORIES: "6000"
+          EW_MAX_STORIES: "8000"
           EW_TRANSLINGUAL: "1"
-          EW_TITLE_FETCH: "350"
+          EW_GKG: "1"
+          EW_TITLE_FETCH: "200"
+          EW_PREV_URL: ${{ steps.pages.outputs.base_url }}
         run: python pipeline/build_news.py
+
+      - name: Build weather grid
+        continue-on-error: true
+        env:
+          EW_PREV_URL: ${{ steps.pages.outputs.base_url }}
+        run: python pipeline/build_weather.py
 
       - name: Save GDELT cache
         if: always()
@@ -67,12 +75,19 @@ jobs:
             --jq '.[] | select(.key != "gdelt-${{ github.run_id }}") | .id' \
             | xargs -r -n1 gh cache delete || true
 
-      - name: Keep the last published news if GDELT failed
-        if: steps.news.outcome != 'success'
+      - name: Keep the last published data if a step failed
+        if: always()
         run: |
-          echo "::warning::GDELT update failed; republishing the previous news.json"
-          curl -fsSL "${{ steps.pages.outputs.base_url }}/data/news.json" -o site/data/news.json \
-            || echo "::warning::No previous news.json found; the site will show its empty state."
+          base="${{ steps.pages.outputs.base_url }}"
+          for f in news history weather; do
+            if [ ! -s "site/data/$f.json" ]; then
+              echo "::warning::$f.json was not built; republishing the previous copy"
+              curl -fsSL "$base/data/$f.json" -o "site/data/$f.json" || rm -f "site/data/$f.json"
+            fi
+          done
+          if [ "${{ steps.news.outcome }}" != "success" ] && [ -s site/data/news.json ]; then
+            echo "::warning::GDELT update failed; republished the previous news.json"
+          fi
 
       - uses: actions/upload-pages-artifact@v3
         with:

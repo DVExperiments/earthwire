@@ -1,0 +1,37 @@
+name: Rebuild population layer
+
+# Optional, run by hand from the Actions tab. Downloads WorldPop at 0.125 degree
+# resolution (twice the original) and commits the new texture. It goes live with
+# the next scheduled update (within 30 minutes), or run "Update news and deploy".
+
+on:
+  workflow_dispatch:
+    inputs:
+      resolution:
+        description: "Degrees per pixel (0.125 is recommended; 0.1 is sharper but a bigger download)"
+        default: "0.125"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests numpy pillow rasterio
+      - name: Build texture
+        env:
+          EW_POP_RES: ${{ inputs.resolution }}
+        run: python tools/build_population.py
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/assets/population-density.png site/assets/population-density.json
+          git commit -m "Rebuild population layer from WorldPop" || echo "No change"
+          git push
