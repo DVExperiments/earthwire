@@ -5,3 +5,5 @@ __pycache__/
 site/data/news.json
 site/data/*.tmp
 .DS_Store
+site/data/history.json
+site/data/weather.json
