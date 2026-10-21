@@ -1,0 +1,19 @@
+{"note":"Major Antarctic research stations, approximate positions (COMNAP station catalogue). y = year-round, s = summer only.",
+"rows":[
+["Amundsen–Scott South Pole","United States",-90.0,0.0,"y"],["McMurdo","United States",-77.846,166.676,"y"],["Palmer","United States",-64.774,-64.053,"y"],
+["Scott Base","New Zealand",-77.849,166.768,"y"],["Vostok","Russia",-78.464,106.837,"y"],["Mirny","Russia",-66.553,93.009,"y"],
+["Progress","Russia",-69.379,76.388,"y"],["Novolazarevskaya","Russia",-70.777,11.824,"y"],["Bellingshausen","Russia",-62.199,-58.961,"y"],
+["Concordia","France and Italy",-75.1,123.333,"y"],["Dumont d'Urville","France",-66.663,140.001,"y"],["Mario Zucchelli","Italy",-74.694,164.113,"s"],
+["Casey","Australia",-66.282,110.527,"y"],["Davis","Australia",-68.576,77.969,"y"],["Mawson","Australia",-67.603,62.874,"y"],
+["Rothera","United Kingdom",-67.568,-68.13,"y"],["Halley VI","United Kingdom",-75.581,-26.657,"y"],["Neumayer III","Germany",-70.674,-8.274,"y"],
+["Kohnen","Germany",-75.0,0.067,"s"],["Troll","Norway",-72.012,2.535,"y"],["Princess Elisabeth","Belgium",-71.95,23.347,"s"],
+["Syowa","Japan",-69.004,39.582,"y"],["Dome Fuji","Japan",-77.317,39.7,"s"],["Maitri","India",-70.767,11.733,"y"],
+["Bharati","India",-69.408,76.188,"y"],["Zhongshan","China",-69.373,76.372,"y"],["Great Wall","China",-62.217,-58.962,"y"],
+["Kunlun","China",-80.417,77.117,"s"],["Taishan","China",-73.864,76.974,"s"],["Jang Bogo","South Korea",-74.624,164.229,"y"],
+["King Sejong","South Korea",-62.223,-58.786,"y"],["Esperanza","Argentina",-63.398,-56.998,"y"],["Marambio","Argentina",-64.24,-56.627,"y"],
+["Carlini","Argentina",-62.238,-58.667,"y"],["San Martín","Argentina",-68.13,-67.103,"y"],["Belgrano II","Argentina",-77.874,-34.627,"y"],
+["Eduardo Frei","Chile",-62.2,-58.963,"y"],["Arturo Prat","Chile",-62.479,-59.664,"y"],["Artigas","Uruguay",-62.184,-58.903,"y"],
+["Comandante Ferraz","Brazil",-62.085,-58.392,"y"],["Vernadsky","Ukraine",-65.246,-64.257,"y"],["SANAE IV","South Africa",-71.673,-2.84,"y"],
+["Wasa","Sweden",-73.043,-13.413,"s"],["Machu Picchu","Peru",-62.092,-58.471,"s"],["Gabriel de Castilla","Spain",-62.977,-60.675,"s"],
+["Juan Carlos I","Spain",-62.663,-60.388,"s"]
+]}

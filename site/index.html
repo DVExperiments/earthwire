@@ -9,6 +9,12 @@
   <meta property="og:title" content="Earthwire">
   <meta property="og:description" content="The world's news, where it happens.">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Earthwire">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..700&display=swap">
@@ -41,6 +47,7 @@
         <ul class="results" id="results" role="listbox" hidden></ul>
       </div>
       <p class="status" id="status" aria-live="polite"></p>
+      <button class="icon-btn" id="dataBtn" type="button" aria-haspopup="dialog">Data</button>
       <button class="icon-btn" id="aboutBtn" type="button" aria-haspopup="dialog">About</button>
     </header>
 
@@ -50,25 +57,23 @@
     </aside>
 
     <div class="dock" id="dock">
-      <div class="legend" id="legend" role="group" aria-label="Show or hide types of news"></div>
+      <div class="legend-wrap">
+        <div class="mode" id="modeSwitch" role="group" aria-label="Colour dots by">
+          <span class="mode-label">Colour by</span>
+          <button type="button" data-mode="type" aria-pressed="true">Event type</button>
+          <button type="button" data-mode="topic" aria-pressed="false">Topic</button>
+        </div>
+        <div class="legend" id="legend" role="group" aria-label="Show or hide categories"></div>
+      </div>
       <div class="timeline">
         <div class="windows" id="windows" role="radiogroup" aria-label="Time window"></div>
         <svg class="spark" id="spark" viewBox="0 0 240 34" preserveAspectRatio="none" role="img" aria-label="Stories per hour over the last day"></svg>
       </div>
       <div class="tools">
+        <button class="tool sq" id="spinBtn" type="button" aria-pressed="false"></button>
         <div class="layers-wrap">
           <button class="tool" id="layersBtn" type="button" aria-expanded="false" aria-controls="layers">Layers</button>
-          <fieldset class="layers" id="layers" hidden>
-            <legend class="sr">Map layers</legend>
-            <label><input type="checkbox" data-layer="news" checked> News</label>
-            <label><input type="checkbox" data-layer="beams" checked> Hotspot beams</label>
-            <label><input type="checkbox" data-layer="pop" checked> Population <span class="swatch pop"></span></label>
-            <label><input type="checkbox" data-layer="air"> Air routes <span class="swatch air"></span></label>
-            <label><input type="checkbox" data-layer="sea"> Shipping lanes <span class="swatch sea"></span></label>
-            <label><input type="checkbox" data-layer="borders" checked> Borders</label>
-            <label><input type="checkbox" data-layer="grid" checked> Grid</label>
-            <label><input type="checkbox" data-layer="rotate" checked> Slow spin</label>
-          </fieldset>
+          <fieldset class="layers" id="layers" hidden></fieldset>
         </div>
         <button class="tool sq" id="zoomIn" type="button" aria-label="Zoom in">+</button>
         <button class="tool sq" id="zoomOut" type="button" aria-label="Zoom out">−</button>
@@ -78,30 +83,48 @@
       </div>
     </div>
 
-    <dialog class="about" id="about" aria-labelledby="aboutTitle">
-      <form method="dialog"><button class="icon-btn close" aria-label="Close">Close</button></form>
-      <h2 id="aboutTitle">How Earthwire works</h2>
-      <p>Each dot is a news story placed where the event it describes happened. Stories come from the
+    <dialog class="sheet data" id="dataDialog" aria-labelledby="dataTitle">
+      <div class="sheet-top"><h2 id="dataTitle">The news in numbers</h2>
+        <form method="dialog"><button class="icon-btn">Close</button></form></div>
+      <div class="sheet-body charts" id="dataBody"></div>
+    </dialog>
+
+    <dialog class="sheet about" id="about" aria-labelledby="aboutTitle">
+      <div class="sheet-top"><h2 id="aboutTitle">How Earthwire works</h2>
+        <form method="dialog"><button class="icon-btn">Close</button></form></div>
+      <div class="sheet-body">
+      <p>Each dot is a news story placed where it happened. Stories come from the
         <a href="https://www.gdeltproject.org/" target="_blank" rel="noopener">GDELT Project</a>, which reads news
-        from around the world in more than 100 languages every 15 minutes. Earthwire rebuilds the map from GDELT every
-        30 minutes and keeps the last 24 hours.</p>
-      <h3>What the dots mean</h3>
-      <div class="about-legend" id="aboutLegend"></div>
+        from around the world in more than 100 languages every 15 minutes. Earthwire rebuilds the map every
+        30 minutes and keeps the last 24 hours. Daily totals are saved, so trends and unusual activity build up over time.</p>
+      <h3>Reading the map</h3>
       <p><span class="glyph solid"></span> A solid dot is placed at a specific city or landmark.
-        <span class="glyph ring"></span> A ring is placed at the centre of a state or province, because the story
-        didn’t name anywhere more precise. Stories that only name a country aren’t drawn; you’ll find them when you
-        open that country. A pulsing dot has stories from the last hour. Bigger dots have more stories.</p>
+        <span class="glyph ring"></span> A ring is placed at the centre of a state or province, because the stories
+        didn’t name anywhere more precise. Stories that only name a country aren’t drawn; open the country to see them.
+        A pulsing dot has stories from the last hour. Bigger dots have more stories.</p>
+      <p>Dots can be coloured by <b>event type</b> (what happened) or by <b>topic</b> (what the story is about).
+        Switch with “Colour by” above the legend. Click a category anywhere to list its stories.</p>
+      <div class="about-legend" id="aboutLegend"></div>
+      <h3>Controls</h3>
+      <p>Drag to spin, scroll or pinch to zoom, double-click to zoom in. The pause button or the space bar stops and
+        starts the slow spin; the globe also holds still while you’re looking at a place. Press <kbd>/</kbd> to search and
+        <kbd>Esc</kbd> to go back to all news.</p>
+      <h3>Layers</h3>
+      <dl class="about-layers" id="aboutLayers"></dl>
       <h3>How accurate is it?</h3>
-      <p>GDELT codes events and locations automatically, so some stories will be in the wrong place or the wrong
-        category, and a place can appear because it was mentioned rather than because something happened there.
-        Treat the map as a guide to where the world’s attention is, then read the original reporting. Headlines that
-        couldn’t be fetched are rebuilt from the article’s web address.</p>
-      <h3>Other layers</h3>
-      <p>Population glow: WorldPop 2020 1&nbsp;km population density (CC BY 4.0). Air routes: the busiest airport pairs
-        from OpenFlights (a 2014 snapshot, ODbL), not live flights. Shipping lanes: Benden (2022), derived from a CIA
-        map of the world’s oceans (CC BY 4.0). Borders, lakes and cities: Natural Earth (public domain). Borders are
-        shown as Natural Earth draws them and don’t imply any position on disputed territory.</p>
+      <p>GDELT codes events, topics and locations automatically, so some stories will be in the wrong place or category,
+        and a place can appear because it was mentioned rather than because something happened there. Treat the map
+        as a guide to where the world’s attention is, then read the original reporting. Stories from non-English
+        sources get an English summary headline, with the original headline and a translation link underneath.</p>
+      <h3>Sources</h3>
+      <p>News: GDELT Project. Population: WorldPop 2020 (CC BY 4.0). Weather: Open-Meteo.com (CC BY 4.0).
+        Air routes: OpenFlights (ODbL). Shipping lanes: Benden (2022), from a CIA map (CC BY 4.0). Antarctic stations:
+        COMNAP. Borders, lakes and cities: Natural Earth (public domain). Borders are shown as Natural Earth draws them
+        and don’t imply any position on disputed territory.</p>
+      <h3>Install it</h3>
+      <p>On a phone, use your browser’s “Add to Home Screen” option to install Earthwire as an app with its own icon.</p>
       <p class="about-foot" id="aboutFoot"></p>
+      </div>
     </dialog>
   </div>
   <noscript><p class="noscript">Earthwire needs JavaScript and WebGL to draw the globe.</p></noscript>

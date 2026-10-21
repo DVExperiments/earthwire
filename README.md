@@ -1,22 +1,29 @@
 # Earthwire
 
 **The world’s news, where it happens.** A holographic globe of the last 24 hours of world news, built on
-[GDELT](https://www.gdeltproject.org/). It runs entirely on GitHub Pages and updates itself every 30 minutes.
+[GDELT](https://www.gdeltproject.org/). It runs entirely on GitHub Pages, updates itself every 30 minutes and
+can be installed on a phone like an app.
 
-Each dot is a news story placed where the event it describes happened, coloured by type:
+Dots can be coloured two ways:
 
-| Colour | Type | What it covers (GDELT CAMEO codes) |
+**By event type** (what happened, from GDELT’s event coding)
+
+| Colour | Type | Covers |
 |---|---|---|
-| Red | Conflict | Fighting, attacks, mass violence (18–20) |
-| Orange | Security | Arrests, crackdowns, military posturing (15, 17) |
-| Yellow | Protest | Demonstrations, strikes, riots (14) |
-| Violet | Tension | Accusations, demands, threats, sanctions (09–13, 16) |
-| Blue | Diplomacy | Statements, appeals, talks, visits, agreements (01–05) |
-| Green | Cooperation | Aid, joint work, releases (06–08) |
+| Red | Conflict | Fighting, attacks, mass violence |
+| Orange | Security | Arrests, crackdowns, military posturing |
+| Yellow | Protest | Demonstrations, strikes, riots |
+| Violet | Tension | Accusations, demands, threats, sanctions |
+| Blue | Diplomacy | Statements, talks, visits, agreements |
+| Green | Cooperation | Aid, joint work, releases |
+| Slate | General | Reporting with no political event: business, science, culture and more |
+
+**By topic** (what the story is about, from GDELT’s Global Knowledge Graph themes): politics, economy,
+tech & science, health, environment, disasters, food & farming, energy, crime & justice and society.
 
 A solid dot is a specific city or landmark. A ring is the centre of a state or province, used when the story
-names nothing more precise. Stories that only name a country aren’t drawn as dots — they’re listed when you open
-that country, so the map never pretends a country-wide story happened at a country’s midpoint.
+names nothing more precise. Stories that only name a country are listed when you open that country, so the map
+never pretends a country-wide story happened at a country’s midpoint.
 
 ---
 
@@ -50,13 +57,26 @@ From then on it updates by itself every 30 minutes. The first run downloads a fu
 ## Using it
 
 - **Drag** to spin, **scroll or pinch** to zoom, **double-click** to zoom into a spot.
-- **Click a dot** to read its stories, or **click a country** to see everything located there.
-- **Search** for any country or city (press `/` to jump to the search box).
-- **Click a type** in the legend to hide or show it; **double-click** one to show only that type.
-- Switch between the **last hour, 6 hours or 24 hours**. The bar chart shows stories per hour for the whole day.
-- **Layers** turns on population, real air routes and real shipping lanes.
-- The address bar always reflects what you’re looking at, so you can share a link to a place, a country, a time
-  window or a filter.
+- The **pause button** (or the **space bar**) stops and starts the slow spin. The globe also holds still while
+  you’re looking at a place, and starts again when you go back to all news.
+- **Click a dot** for its stories, **click a country** for everything located there, or **click a category**
+  in the side panel to list every story in it.
+- **Search** for a country, city or category (press `/`). **Esc** goes back to all news.
+- **Colour by** switches the dots between event type and topic. Click a legend chip to hide or show it;
+  double-click to show only that one.
+- Choose **1 hour, 6 hours or 24 hours** (or click the coloured time in the panel title).
+- **Cross-border links** are arcs between countries whose people or governments act on each other. Open a
+  country to see its connected countries, then open a pair to read the stories linking them.
+- **Unusual activity** appears once a week of history has built up: categories running well above a country’s
+  normal daily level.
+- **Data** opens charts: stories per hour, event and topic shares, top countries, strongest links, languages,
+  sources, tone of coverage and daily totals going back up to four months.
+- **Layers** adds population, day and night, Antarctic stations, air routes, shipping lanes, live wind, clouds
+  and temperature. Each layer is explained in the menu and in About.
+- Places show the **local weather** from Open-Meteo.
+- **Install it:** on a phone, open the site and choose *Add to Home Screen* (Safari: Share menu; Chrome: ⋮ menu).
+  It opens full screen with its own icon.
+- The address bar always reflects what you’re looking at, so any view can be shared as a link.
 
 ---
 
@@ -65,52 +85,70 @@ From then on it updates by itself every 30 minutes. The first run downloads a fu
 ```
 GitHub Actions (every 30 min)
   pipeline/build_news.py
-    ├─ reads GDELT 2.0 event exports for the last 24 h (English + Translingual, 65 languages)
-    ├─ keeps only geocoded events, one story per article URL
-    ├─ picks each story's best event (lead event, most precise place, most coverage)
-    ├─ selects up to 6,000 stories: every place gets its top story first, then the rest by coverage
-    ├─ fetches real headlines for the top stories (cached between runs)
-    └─ writes site/data/news.json
+    ├─ downloads GDELT 2.0 event exports AND Global Knowledge Graph files for the last 24 h
+    │  (English + Translingual, 65 languages); each 15-minute file is cached, so only new ones download
+    ├─ events give the event type, location and the countries involved (cross-border links)
+    ├─ GKG gives topics, real page titles, source language, and news that has no political event
+    ├─ merges both into one story per article, picks where each story happened
+    ├─ selects up to 8,000 stories: the newest hour for every place, every place's top story,
+    │  a quota for every event type and topic, then the rest by coverage
+    ├─ writes site/data/news.json
+    └─ updates site/data/history.json: daily counts per country, carried forward from the live site
+  pipeline/build_weather.py
+    └─ a 7.5° global grid of current conditions from Open-Meteo, refreshed every 4 hours
   → deploys site/ to GitHub Pages
 
 Browser
-  site/index.html + js/*.js + vendor/three.module.min.js (no build step)
+  plain HTML, CSS and JavaScript modules + three.js (no build step); a service worker makes it installable
 ```
 
 ```
 .github/workflows/
-  update-and-deploy.yml   scheduled news build + Pages deploy
+  update-and-deploy.yml   scheduled news + weather build and Pages deploy
   keepalive.yml           monthly empty commit so schedules stay active
+  build-population.yml    optional, manual: rebuild the population layer at higher resolution
 pipeline/
-  build_news.py           GDELT → news.json (Python standard library only)
-  cameo.py                event codes, plain-English descriptions, category mapping
+  build_news.py           GDELT → news.json + history.json (Python standard library only)
+  build_weather.py        Open-Meteo → weather.json
+  cameo.py                event codes, plain-English descriptions, event types
+  topics.py               GKG themes → topics
 tools/
-  build_static_data.py    rebuilds the static geography layers (only needed to refresh them)
+  build_static_data.py    rebuilds borders, cities, routes, lanes, land mask
+  build_population.py     rebuilds the WorldPop population texture
 site/
-  index.html, css/, js/   the app
-  data/                   countries, cities, air routes, shipping lanes (+ news.json, generated)
-  assets/                 land mask, population texture, icon
+  index.html, css/, js/, sw.js, manifest.webmanifest
+  data/                   countries, cities, air routes, shipping lanes, stations (+ generated news, history, weather)
+  assets/                 land mask, population texture, icons
   vendor/                 three.js r169
 ```
 
 ### Settings
 
-Change these in `.github/workflows/update-and-deploy.yml`, under the *Build news from GDELT* step:
+Change these in `.github/workflows/update-and-deploy.yml`:
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `EW_HOURS` | `24` | Hours of news kept on the map |
-| `EW_MAX_STORIES` | `6000` | Stories included in `news.json` (all stories still count toward dot sizes) |
-| `EW_TRANSLINGUAL` | `1` | Include GDELT’s translated non-English coverage (`0` for English sources only) |
-| `EW_TITLE_FETCH` | `350` | New headlines fetched from publishers per run |
+| `EW_HOURS` | `24` | Hours of news on the map |
+| `EW_MAX_STORIES` | `8000` | Stories included in `news.json` (all stories still count toward dot sizes and charts) |
+| `EW_TRANSLINGUAL` | `1` | Include GDELT’s non-English coverage (`0` for English sources only) |
+| `EW_GKG` | `1` | Include the Global Knowledge Graph (topics, titles, general news). `0` makes runs much faster but drops topics |
+| `EW_TITLE_FETCH` | `200` | Headlines fetched from publishers per run, for stories GDELT has no title for |
+| `EW_WEATHER_MAX_AGE` | `240` | Minutes before the weather grid is refreshed (keeps within Open-Meteo’s free limit) |
 
-To change how often it updates, edit the `cron` line (GitHub runs schedules every 5 minutes at most, and
-often a few minutes late).
+**The first run takes longer** (roughly 10–25 minutes) because it downloads a full day of GDELT files, including
+the large Knowledge Graph files. Later runs only download the newest files and take a few minutes.
+
+### Sharper population layer (optional)
+
+The population dots come from a WorldPop texture. To rebuild it at twice the resolution, go to
+**Actions → Rebuild population layer → Run workflow**. It commits a new texture, which goes live with the next
+scheduled update.
 
 ### Running it on your own computer
 
 ```bash
-python pipeline/build_news.py        # needs Python 3.10+, no packages
+python pipeline/build_news.py        # Python 3.10+, no packages
+python pipeline/build_weather.py
 cd site && python -m http.server 8000
 # open http://localhost:8000
 ```
@@ -125,8 +163,13 @@ using each article’s lead event, preferring precise locations and never drawin
 but it can’t remove it. Read the map as a picture of where the world’s attention is, and read the original
 reporting for the facts.
 
-Headlines that couldn’t be fetched from the publisher are rebuilt from the article’s web address and shown in
-a lighter weight.
+Stories from non-English sources get an English summary headline written from GDELT’s coding (for example
+“Demonstration or rally in Lyon, France”), with the original headline and a *Read in English* link that opens the
+article through Google Translate. Headlines that couldn’t be found at all are rebuilt from the article’s web
+address and shown in a lighter weight.
+
+History starts on your first deployment and needs about a week before *Unusual activity* appears. If the site
+goes more than a day without an update, that gap is missing from the daily history.
 
 ---
 
@@ -144,6 +187,17 @@ a lighter weight.
 - **No build tools.** The site is plain HTML, CSS and JavaScript modules; three.js is included.
 - **Resilient updates.** Cached downloads, automatic fallback to the last good data, and self-cleaning caches.
 
+### Version 2 (user-testing update)
+
+- Topics from GDELT’s Knowledge Graph, plus general news that isn’t a political event.
+- Cross-border links, connected countries and country-pair views.
+- Clickable categories, a Data dashboard, unusual-activity alerts and daily history.
+- Pause/resume button and space bar; the globe holds still while a place is open.
+- Population redrawn as a sharp dot matrix with towns boosted, so sparsely populated countries show.
+- Day and night, live wind, clouds, temperature and local weather; Antarctic research stations.
+- Installable on phones; English summary headlines and translation links for non-English sources.
+- Clearer navigation, layer explanations, distinct air and sea colours, and the 1-hour “not mapped” bug fixed.
+
 ---
 
 ## Credits and licences
@@ -153,6 +207,8 @@ a lighter weight.
   DOI 10.5258/SOTON/WP00674 — CC BY 4.0. Cleaned for display by `tools/build_static_data.py`.
 - Borders, lakes and cities: [Natural Earth](https://www.naturalearthdata.com/) — public domain. Borders are shown
   as Natural Earth draws them and don’t imply any position on disputed territory.
+- Weather: [Open-Meteo](https://open-meteo.com/) — CC BY 4.0, free for non-commercial use.
+- Antarctic stations: positions from the COMNAP station catalogue.
 - Air routes: [OpenFlights](https://openflights.org/data) route and airport data (2014 snapshot) — ODbL.
 - Shipping lanes: Benden, P. (2022). *Global Shipping Lanes*. Zenodo. DOI 10.5281/zenodo.6361763 — CC BY 4.0.
 - Rendering: [three.js](https://threejs.org/) — MIT (see `site/vendor/three.LICENSE`).
