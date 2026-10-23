@@ -38,10 +38,15 @@ export async function buildPopulation(textureUrl, cities) {
   }
   const n = cells.size;
   const positions = new Float32Array(n * 3), values = new Float32Array(n), tmp = [0, 0, 0];
+  // A perfectly regular grid beats against the screen's pixel grid while the globe
+  // turns (moiré). A fixed random offset inside each cell breaks that up.
+  let seed = 1234567;
+  const rand = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
   let i = 0;
   for (const [key, v] of cells) {
     const r = Math.floor(key / 100000), c = key % 100000;
-    const lat = -90 + (r + 0.5) * step, lon = -180 + (c + 0.5) * (360 / rowCols[r]);
+    const lat = -90 + (r + 0.5 + (rand() - 0.5) * 0.8) * step;
+    const lon = -180 + (c + 0.5 + (rand() - 0.5) * 0.8) * (360 / rowCols[r]);
     toXYZ(lat, lon, 1.0012, tmp);
     positions.set(tmp, i * 3);
     values[i++] = Math.min(1, Math.pow(v, 1.25) * 1.08);

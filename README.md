@@ -27,6 +27,33 @@ never pretends a country-wide story happened at a country’s midpoint.
 
 ---
 
+## Setting it up
+
+1. Create a new **public** repository on GitHub (for example `earthwire`).
+2. Unzip this folder and upload **everything inside it** to the repository root, including the hidden
+   `.github` folder. (On the GitHub website: *Add file → Upload files*, then drag the contents in. If your
+   computer hides the `.github` folder, turn on “show hidden files” first.)
+3. In the repository, go to **Settings → Pages** and set **Source** to **GitHub Actions**.
+4. Go to the **Actions** tab. If it asks, click the button to enable workflows. Open
+   **Update news and deploy** and click **Run workflow**.
+5. After 3–6 minutes the run finishes and the site is live at
+   `https://<your-username>.github.io/<repository-name>/`.
+
+From then on it updates by itself every 30 minutes. The first run downloads a full day of GDELT files
+(a few minutes); later runs only download the new 15-minute files.
+
+### If something goes wrong
+
+- **The site says “No news to show yet”.** The news build hasn’t succeeded yet. Open the latest run in the
+  Actions tab and look at the *Build news from GDELT* step.
+- **A run shows a yellow warning about GDELT.** GDELT was briefly unreachable, so the workflow re-published the
+  previous news. The next run will usually catch up on its own.
+- **Updates stop after a couple of months.** GitHub pauses scheduled workflows in quiet repositories. The
+  included *Keep scheduled updates alive* workflow prevents this; if it ever happens, go to Actions and re-enable
+  the workflow.
+
+---
+
 ## Using it
 
 - **Drag** to spin, **scroll or pinch** to zoom, **double-click** to zoom into a spot.
@@ -47,6 +74,8 @@ never pretends a country-wide story happened at a country’s midpoint.
 - **Layers** adds population, day and night, Antarctic stations, air routes, shipping lanes, live wind, clouds
   and temperature. Each layer is explained in the menu and in About.
 - Places show the **local weather** from Open-Meteo.
+- The **view button** in the top-right corner (or the **H** key) cycles between everything, globe and side panel,
+  and globe only. Your choice is remembered. On phones the layout is already compact, so it isn’t shown.
 - **Install it:** on a phone, open the site and choose *Add to Home Screen* (Safari: Share menu; Chrome: ⋮ menu).
   It opens full screen with its own icon.
 - The address bar always reflects what you’re looking at, so any view can be shared as a link.
@@ -111,9 +140,20 @@ Change these in `.github/workflows/update-and-deploy.yml`:
 **The first run takes longer** (roughly 10–25 minutes) because it downloads a full day of GDELT files, including
 the large Knowledge Graph files. Later runs only download the newest files and take a few minutes.
 
-### Sharper population layer 
+### Sharper population layer (optional)
 
-The population dots come from a WorldPop texture. 
+The population dots come from a WorldPop texture. To rebuild it at twice the resolution, go to
+**Actions → Rebuild population layer → Run workflow**. It commits a new texture, which goes live with the next
+scheduled update.
+
+### Running it on your own computer
+
+```bash
+python pipeline/build_news.py        # Python 3.10+, no packages
+python pipeline/build_weather.py
+cd site && python -m http.server 8000
+# open http://localhost:8000
+```
 
 ---
 
@@ -159,6 +199,12 @@ goes more than a day without an update, that gap is missing from the daily histo
 - Day and night, live wind, clouds, temperature and local weather; Antarctic research stations.
 - Installable on phones; English summary headlines and translation links for non-English sources.
 - Clearer navigation, layer explanations, distinct air and sea colours, and the 1-hour “not mapped” bug fixed.
+
+### Version 2.1
+
+- View modes to hide the controls and the side panel (button or H key).
+- A more compact layout for smaller laptop screens.
+- Population dots no longer shimmer while the globe turns.
 
 ---
 

@@ -101,23 +101,30 @@ const dotFrag = /* glsl */`
 const popVert = /* glsl */`
   attribute float aV;
   uniform float uSpacing; uniform float uPx; uniform vec3 uSun; uniform float uNightOn;
-  varying float vV; varying float vFacing; varying float vNight;
+  varying float vV; varying float vFacing; varying float vNight; varying float vComp; varying float vSoft;
   void main(){
     vec3 n = normalize(position);
     vFacing = dot(n, normalize(cameraPosition - position));
     vNight = smoothstep(0.05, -0.2, dot(n, uSun)) * uNightOn;
     vV = aV;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    float s = max(1.4, uSpacing * (0.22 + 0.42 * aV));
+    // When zoomed out, dots are closer together than a few pixels. Instead of tiny
+    // hard dots (which shimmer), draw soft overlapping dots and dim them to match,
+    // so the layer reads as a smooth glow. Zoomed in, they become crisp dots again.
+    float base = max(1.4, uSpacing * (0.22 + 0.42 * aV));
+    float soft = 1.0 - smoothstep(3.0, 8.0, uSpacing);
+    float s = max(base, uSpacing * 1.6 * soft);
+    vComp = clamp((base * base) / (s * s) * 1.9, 0.16, 1.0);
+    vSoft = soft;
     gl_PointSize = vFacing > 0.0 ? s * uPx : 0.0;
   }`;
 const popFrag = /* glsl */`
   uniform float uOn;
-  varying float vV; varying float vFacing; varying float vNight;
+  varying float vV; varying float vFacing; varying float vNight; varying float vComp; varying float vSoft;
   void main(){
     float d = length(gl_PointCoord * 2.0 - 1.0);
     if (d > 1.0) discard;
-    float a = smoothstep(1.0, 0.35, d);
+    float a = mix(smoothstep(1.0, 0.35, d), exp(-d * d * 2.2) * (1.0 - d * d), vSoft) * vComp;
     vec3 col = mix(vec3(1.0, 0.55, 0.22), vec3(1.0, 0.92, 0.70), vV * vV);
     float k = (0.18 + 0.82 * vV) * smoothstep(0.0, 0.25, vFacing) * uOn * mix(0.75, 1.35, vNight);
     gl_FragColor = vec4(col * a * k * 0.85, 1.0);

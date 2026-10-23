@@ -49,6 +49,7 @@
       <p class="status" id="status" aria-live="polite"></p>
       <button class="icon-btn" id="dataBtn" type="button" aria-haspopup="dialog">Data</button>
       <button class="icon-btn" id="aboutBtn" type="button" aria-haspopup="dialog">About</button>
+      <button class="icon-btn focus-btn" id="focusBtn" type="button"></button>
     </header>
 
     <aside class="panel" id="panel" aria-label="News list" data-sheet="peek">
@@ -56,6 +57,7 @@
       <div class="panel-body" id="panelBody" tabindex="-1"></div>
     </aside>
 
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div class="dock" id="dock">
       <div class="legend-wrap">
         <div class="mode" id="modeSwitch" role="group" aria-label="Colour dots by">
@@ -107,7 +109,8 @@
       <div class="about-legend" id="aboutLegend"></div>
       <h3>Controls</h3>
       <p>Drag to spin, scroll or pinch to zoom, double-click to zoom in. The pause button or the space bar stops and
-        starts the slow spin; the globe also holds still while you’re looking at a place. Press <kbd>/</kbd> to search and
+        starts the slow spin; the globe also holds still while you’re looking at a place. The view button at the top
+        (or <kbd>H</kbd>) hides the controls, then the side panel, for an uncluttered globe. Press <kbd>/</kbd> to search and
         <kbd>Esc</kbd> to go back to all news.</p>
       <h3>Layers</h3>
       <dl class="about-layers" id="aboutLayers"></dl>

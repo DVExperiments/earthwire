@@ -42,6 +42,7 @@ const state = {
   news: null, countries: [], cities: null, history: null, weather: null,
   storyLimit: 40,
   spin: !reduced,
+  ui: (() => { try { return localStorage.getItem('earthwire-ui') || 'full'; } catch { return 'full'; } })(),
   layers: Object.fromEntries(LAYERS.filter((l) => l.id).map((l) => [l.id, l.on])),
 };
 const cats = () => DIMS[state.mode];
@@ -569,6 +570,7 @@ function findCountry(i3) {
 
 function select(view) {
   state.view = view; state.storyLimit = 40;
+  if (state.ui === 'globe' && !mobile.matches && view.type !== 'overview') setUiMode('panel');
   globe.setSelected(view.type === 'place' ? view.place.key : null);
   globe.setHold(view.type !== 'overview' && view.type !== 'category');
   drawLinks();
@@ -734,6 +736,43 @@ async function loadHistory() {
   try { state.history = await getJSON('data/history.json', { bust: true }); } catch { state.history = null; }
 }
 
+// ------------------------------------------------------------------ view modes
+const UI_MODES = {
+  full: { next: 'panel', label: 'Hide controls', toast: '' },
+  panel: { next: 'globe', label: 'Hide panel', toast: 'Controls hidden. Press H again to hide the panel too.' },
+  globe: { next: 'full', label: 'Show all', toast: 'Globe only. Press H or “Show all” to bring everything back.' },
+};
+let toastTimer;
+function setUiMode(mode, announce = true) {
+  if (!UI_MODES[mode]) mode = 'full';
+  state.ui = mode;
+  // Phones already have a compact layout, so view modes are a desktop feature.
+  $('#app').dataset.ui = mobile.matches ? 'full' : mode;
+  try { localStorage.setItem('earthwire-ui', mode); } catch { /* private mode */ }
+  const b = $('#focusBtn');
+  b.textContent = UI_MODES[mode].label;
+  b.title = `${UI_MODES[mode].label} (H)`;
+  b.setAttribute('aria-pressed', String(mode !== 'full'));
+  $('#layers').hidden = true;
+  $('#tip').hidden = true;
+  const t = $('#toast');
+  clearTimeout(toastTimer);
+  t.textContent = announce ? UI_MODES[mode].toast : '';
+  t.classList.toggle('show', !!t.textContent);
+  if (t.textContent) toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+  layoutInsets();
+  setTimeout(layoutInsets, 360);
+}
+function bindViewModes() {
+  $('#focusBtn').addEventListener('click', () => setUiMode(UI_MODES[state.ui].next));
+  addEventListener('keydown', (e) => {
+    if (e.target.closest('input, textarea, select, dialog[open]') || e.ctrlKey || e.metaKey || e.altKey) return;
+    if ((e.key === 'h' || e.key === 'H') && !mobile.matches) setUiMode(UI_MODES[state.ui].next);
+  });
+  setUiMode(state.ui, false);
+  mobile.addEventListener('change', () => setUiMode(state.ui, false));
+}
+
 // ------------------------------------------------------------------ search
 function norm(s) { return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
 
@@ -846,7 +885,7 @@ function layoutInsets() {
     globe.setInset(0, Math.min(h, innerHeight * 0.52) + 90);
   } else {
     $('#app').style.removeProperty('--sheet-h-now');
-    globe.setInset(panel.offsetWidth + 14, 0);
+    globe.setInset(state.ui === 'globe' ? 0 : panel.offsetWidth + 14, 0);
   }
 }
 
@@ -897,3 +936,6 @@ function applyHash() {
 
 // History powers "Unusual activity" and country trends; fetch it quietly.
 loadHistory().then(() => { if (state.news) renderPanel(); });
+
+// View modes are set up last: everything they touch is defined above.
+bindViewModes();

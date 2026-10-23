@@ -1,7 +1,7 @@
 // Earthwire service worker: makes the app installable and quick to reopen.
 // App files are served from cache and refreshed in the background; news and
 // weather always try the network first so they're never stale when online.
-const VERSION = 'earthwire-v2.0';
+const VERSION = 'earthwire-v2.1';
 const SHELL = ['./', 'index.html', 'css/app.css', 'js/main.js', 'js/globe.js', 'js/geo.js', 'js/data.js',
   'js/charts.js', 'js/population.js', 'vendor/three.module.min.js', 'assets/land.png',
   'assets/population-density.png', 'assets/icon.svg', 'data/countries.json', 'data/cities.json', 'data/stations.json'];

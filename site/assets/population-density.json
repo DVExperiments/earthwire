@@ -2,6 +2,6 @@
   "source": "WorldPop 1 km population density 2020",
   "citation": "WorldPop et al. (2018), Global High Resolution Population Denominators Project, DOI: 10.5258/SOTON/WP00674",
   "license": "CC BY 4.0",
-  "encoding": "log1p(density)/log1p(10000) * 255, equirectangular 2880x1440",
-  "cleaned": "no-data removed at source by tools/build_population.py"
+  "encoding": "log1p(density)/log1p(10000) * 255, equirectangular 1440x720",
+  "cleaned": "ocean, lake and coastal no-data removed by tools/build_static_data.py"
 }

@@ -336,3 +336,41 @@ kbd { padding: 0 6px; border: 1px solid var(--line-strong); border-radius: 4px; 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
 }
+
+/* ---------------------------------------------------------------- view modes */
+.focus-btn[aria-pressed="true"] { color: var(--holo); border-color: var(--line-strong); }
+.dock, .search, .status, #dataBtn, #aboutBtn, .panel { transition: opacity .3s, transform .35s cubic-bezier(.2, .8, .2, 1), visibility .35s; }
+.app[data-ui="panel"] .dock, .app[data-ui="globe"] .dock,
+.app[data-ui="panel"] .search, .app[data-ui="globe"] .search,
+.app[data-ui="panel"] .status, .app[data-ui="globe"] .status,
+.app[data-ui="panel"] #dataBtn, .app[data-ui="globe"] #dataBtn,
+.app[data-ui="panel"] #aboutBtn, .app[data-ui="globe"] #aboutBtn { opacity: 0; visibility: hidden; pointer-events: none; }
+.app[data-ui="panel"] .focus-btn, .app[data-ui="globe"] .focus-btn { margin-left: auto; }
+.app[data-ui="globe"] .panel { opacity: 0; visibility: hidden; transform: translateX(calc(100% + 24px)); }
+.app:not([data-ui="full"]) .bar { background: none; }
+.toast { position: absolute; z-index: 12; left: 50%; top: calc(var(--bar-h) + var(--safe-t) + 6px); max-width: min(90vw, 460px);
+  padding: 9px 16px; border-radius: 99px; border: 1px solid var(--line-strong); background: var(--glass-strong); color: var(--ink);
+  font-size: 13.5px; text-align: center; opacity: 0; transform: translate(-50%, -6px); pointer-events: none; transition: opacity .25s, transform .25s; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------------------------------------------------------------- compact desktop (smaller laptop screens) */
+@media (min-width: 821px) and (max-width: 1360px), (min-width: 821px) and (max-height: 820px) {
+  :root { --panel-w: 360px; }
+  .panel-body { padding: 18px 18px 24px; }
+  .panel-head { margin: -18px -18px 14px; padding: 12px 18px 10px; top: -18px; }
+  .panel h2 { font-size: 26px; }
+  .dock { gap: 8px; left: 10px; bottom: calc(10px + var(--safe-b)); right: calc(var(--panel-w) + 22px); }
+  .legend-wrap { max-width: 400px; }
+  .legend { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; mask-image: linear-gradient(90deg, #000 88%, transparent); padding-right: 24px; }
+  .legend::-webkit-scrollbar { display: none; }
+  .chip { flex: none; height: 28px; padding: 0 10px 0 8px; font-size: 12.5px; }
+  .mode { font-size: 12.5px; }
+  .mode button { height: 24px; padding: 0 10px; }
+  .timeline { width: 210px; padding: 6px 10px 4px; }
+  .spark { height: 26px; }
+  .tool { height: 36px; padding: 0 12px; }
+  .tool.sq { width: 36px; }
+  #zoomIn, #zoomOut { display: none; }
+  .search { flex-basis: 300px; }
+}
+@media (max-width: 820px) { .focus-btn { display: none; } }
