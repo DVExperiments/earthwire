@@ -27,33 +27,6 @@ never pretends a country-wide story happened at a country’s midpoint.
 
 ---
 
-## Setting it up
-
-1. Create a new **public** repository on GitHub (for example `earthwire`).
-2. Unzip this folder and upload **everything inside it** to the repository root, including the hidden
-   `.github` folder. (On the GitHub website: *Add file → Upload files*, then drag the contents in. If your
-   computer hides the `.github` folder, turn on “show hidden files” first.)
-3. In the repository, go to **Settings → Pages** and set **Source** to **GitHub Actions**.
-4. Go to the **Actions** tab. If it asks, click the button to enable workflows. Open
-   **Update news and deploy** and click **Run workflow**.
-5. After 3–6 minutes the run finishes and the site is live at
-   `https://<your-username>.github.io/<repository-name>/`.
-
-From then on it updates by itself every 30 minutes. The first run downloads a full day of GDELT files
-(a few minutes); later runs only download the new 15-minute files.
-
-### If something goes wrong
-
-- **The site says “No news to show yet”.** The news build hasn’t succeeded yet. Open the latest run in the
-  Actions tab and look at the *Build news from GDELT* step.
-- **A run shows a yellow warning about GDELT.** GDELT was briefly unreachable, so the workflow re-published the
-  previous news. The next run will usually catch up on its own.
-- **Updates stop after a couple of months.** GitHub pauses scheduled workflows in quiet repositories. The
-  included *Keep scheduled updates alive* workflow prevents this; if it ever happens, go to Actions and re-enable
-  the workflow.
-
----
-
 ## Using it
 
 - **Drag** to spin, **scroll or pinch** to zoom, **double-click** to zoom into a spot.
@@ -138,20 +111,9 @@ Change these in `.github/workflows/update-and-deploy.yml`:
 **The first run takes longer** (roughly 10–25 minutes) because it downloads a full day of GDELT files, including
 the large Knowledge Graph files. Later runs only download the newest files and take a few minutes.
 
-### Sharper population layer (optional)
+### Sharper population layer 
 
-The population dots come from a WorldPop texture. To rebuild it at twice the resolution, go to
-**Actions → Rebuild population layer → Run workflow**. It commits a new texture, which goes live with the next
-scheduled update.
-
-### Running it on your own computer
-
-```bash
-python pipeline/build_news.py        # Python 3.10+, no packages
-python pipeline/build_weather.py
-cd site && python -m http.server 8000
-# open http://localhost:8000
-```
+The population dots come from a WorldPop texture. 
 
 ---
 
